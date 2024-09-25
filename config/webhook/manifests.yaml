@@ -15,6 +15,13 @@ webhooks:
   matchPolicy: Exact
   name: mutate-pod.sparkoperator.k8s.io
   reinvocationPolicy: Never
+  # Not an operator pod
+  objectSelector:
+    matchExpressions:
+      - key: app.kubernetes.io/name
+        operator: NotIn
+        values:
+          - spark-operator
   rules:
   - apiGroups:
     - ""

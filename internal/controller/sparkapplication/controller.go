@@ -99,12 +99,17 @@ func NewReconciler(
 	}
 }
 
-// +kubebuilder:rbac:groups=,resources=pods,verbs=get;list;watch;create;update;patch;delete;deletecollection
-// +kubebuilder:rbac:groups=,resources=configmaps,verbs=get;list;create;update;patch;delete
-// +kubebuilder:rbac:groups=,resources=services,verbs=get;create;delete
-// +kubebuilder:rbac:groups=,resources=nodes,verbs=get
-// +kubebuilder:rbac:groups=,resources=events,verbs=create;update;patch
-// +kubebuilder:rbac:groups=,resources=resourcequotas,verbs=get;list;watch
+// +kubebuilder:rbac:groups="",resources=pods,verbs=get;list;watch;create;update;patch;delete;deletecollection
+// +kubebuilder:rbac:groups="",resources=configmaps,verbs=get;list;create;update;patch;delete
+// +kubebuilder:rbac:groups="",resources=services,verbs=get;create;delete
+// +kubebuilder:rbac:groups="",resources=nodes,verbs=get
+// +kubebuilder:rbac:groups="",resources=events,verbs=create;update;patch
+// +kubebuilder:rbac:groups="",resources=resourcequotas,verbs=get;list;watch
+// +kubebuilder:rbac:groups="",namespace=placeholder,resources=secrets,verbs=get;list;watch;update
+// +kubebuilder:rbac:groups="",namespace=placeholder,resources=events,verbs=create;update;patch
+// +kubebuilder:rbac:groups="admissionregistration.k8s.io",resources=mutatingwebhookconfigurations;validatingwebhookconfigurations,verbs=get;list;watch
+// +kubebuilder:rbac:groups="admissionregistration.k8s.io",namespace=placeholder,resources=mutatingwebhookconfigurations;validatingwebhookconfigurations,verbs=get;list;watch
+// +kubebuilder:rbac:groups="admissionregistration.k8s.io",namespace=placeholder,resources=mutatingwebhookconfigurations;validatingwebhookconfigurations,verbs=get;update,resourceNames=spark-operator-webhook-server
 // +kubebuilder:rbac:groups=extensions,resources=ingresses,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=networking.k8s.io,resources=ingresses,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=apiextensions.k8s.io,resources=customresourcedefinitions,verbs=get

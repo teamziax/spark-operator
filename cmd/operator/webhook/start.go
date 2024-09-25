@@ -17,7 +17,6 @@ limitations under the License.
 package webhook
 
 import (
-	"context"
 	"crypto/tls"
 	"flag"
 	"os"
@@ -33,17 +32,14 @@ import (
 	"go.uber.org/zap/zapcore"
 	admissionregistrationv1 "k8s.io/api/admissionregistration/v1"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
-	"k8s.io/apimachinery/pkg/util/wait"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/cache"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/controller"
 	logzap "sigs.k8s.io/controller-runtime/pkg/log/zap"
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 	ctrlwebhook "sigs.k8s.io/controller-runtime/pkg/webhook"
@@ -51,10 +47,7 @@ import (
 	sparkoperator "github.com/kubeflow/spark-operator"
 	"github.com/kubeflow/spark-operator/api/v1beta1"
 	"github.com/kubeflow/spark-operator/api/v1beta2"
-	"github.com/kubeflow/spark-operator/internal/controller/mutatingwebhookconfiguration"
-	"github.com/kubeflow/spark-operator/internal/controller/validatingwebhookconfiguration"
 	"github.com/kubeflow/spark-operator/internal/webhook"
-	"github.com/kubeflow/spark-operator/pkg/certificate"
 	"github.com/kubeflow/spark-operator/pkg/common"
 	"github.com/kubeflow/spark-operator/pkg/util"
 	// +kubebuilder:scaffold:imports
@@ -220,63 +213,63 @@ func start() {
 		os.Exit(1)
 	}
 
-	client, err := client.New(cfg, client.Options{Scheme: mgr.GetScheme()})
-	if err != nil {
-		logger.Error(err, "Failed to create client")
-		os.Exit(1)
-	}
-
-	certProvider := certificate.NewProvider(
-		client,
-		webhookServiceName,
-		webhookServiceNamespace,
-	)
-
-	if err := wait.ExponentialBackoff(
-		wait.Backoff{
-			Steps:    5,
-			Duration: 1 * time.Second,
-			Factor:   2.0,
-			Jitter:   0.1,
-		},
-		func() (bool, error) {
-			logger.Info("Syncing webhook secret", "name", webhookSecretName, "namespace", webhookSecretNamespace)
-			if err := certProvider.SyncSecret(context.TODO(), webhookSecretName, webhookSecretNamespace); err != nil {
-				if errors.IsAlreadyExists(err) || errors.IsConflict(err) {
-					return false, nil
-				}
-				return false, err
-			}
-			return true, nil
-		},
-	); err != nil {
-		logger.Error(err, "Failed to sync webhook secret")
-		os.Exit(1)
-	}
-
-	logger.Info("Writing certificates", "path", webhookCertDir, "certificate name", webhookCertName, "key name", webhookKeyName)
-	if err := certProvider.WriteFile(webhookCertDir, webhookCertName, webhookKeyName); err != nil {
-		logger.Error(err, "Failed to save certificate")
-		os.Exit(1)
-	}
-
-	if err := mutatingwebhookconfiguration.NewReconciler(
-		mgr.GetClient(),
-		certProvider,
-		mutatingWebhookName,
-	).SetupWithManager(mgr, controller.Options{}); err != nil {
-		logger.Error(err, "Failed to create controller", "controller", "MutatingWebhookConfiguration")
-		os.Exit(1)
-	}
-
-	if err := validatingwebhookconfiguration.NewReconciler(
-		mgr.GetClient(),
-		certProvider,
-		validatingWebhookName,
-	).SetupWithManager(mgr, controller.Options{}); err != nil {
-		logger.Error(err, "Failed to create controller", "controller", "ValidatingWebhookConfiguration")
-		os.Exit(1)
-	}
+	//client, err := client.New(cfg, client.Options{Scheme: mgr.GetScheme()})
+	//if err != nil {
+	//	logger.Error(err, "Failed to create client")
+	//	os.Exit(1)
+	//}
+	//
+	//certProvider := certificate.NewProvider(
+	//	client,
+	//	webhookServiceName,
+	//	webhookServiceNamespace,
+	//)
+	//
+	//if err := wait.ExponentialBackoff(
+	//	wait.Backoff{
+	//		Steps:    5,
+	//		Duration: 1 * time.Second,
+	//		Factor:   2.0,
+	//		Jitter:   0.1,
+	//	},
+	//	func() (bool, error) {
+	//		logger.Info("Syncing webhook secret", "name", webhookSecretName, "namespace", webhookSecretNamespace)
+	//		if err := certProvider.SyncSecret(context.TODO(), webhookSecretName, webhookSecretNamespace); err != nil {
+	//			if errors.IsAlreadyExists(err) || errors.IsConflict(err) {
+	//				return false, nil
+	//			}
+	//			return false, err
+	//		}
+	//		return true, nil
+	//	},
+	//); err != nil {
+	//	logger.Error(err, "Failed to sync webhook secret")
+	//	os.Exit(1)
+	//}
+	//
+	//logger.Info("Writing certificates", "path", webhookCertDir, "certificate name", webhookCertName, "key name", webhookKeyName)
+	//if err := certProvider.WriteFile(webhookCertDir, webhookCertName, webhookKeyName); err != nil {
+	//	logger.Error(err, "Failed to save certificate")
+	//	os.Exit(1)
+	//}
+	//
+	//if err := mutatingwebhookconfiguration.NewReconciler(
+	//	mgr.GetClient(),
+	//	certWatcher,
+	//	mutatingWebhookName,
+	//).SetupWithManager(mgr, controller.Options{}); err != nil {
+	//	logger.Error(err, "Failed to create controller", "controller", "MutatingWebhookConfiguration")
+	//	os.Exit(1)
+	//}
+	//
+	//if err := validatingwebhookconfiguration.NewReconciler(
+	//	mgr.GetClient(),
+	//	certWatcher,
+	//	validatingWebhookName,
+	//).SetupWithManager(mgr, controller.Options{}); err != nil {
+	//	logger.Error(err, "Failed to create controller", "controller", "ValidatingWebhookConfiguration")
+	//	os.Exit(1)
+	//}
 
 	if err := ctrl.NewWebhookManagedBy(mgr).
 		For(&v1beta2.SparkApplication{}).
