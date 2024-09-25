@@ -1,0 +1,49 @@
+apiVersion: operators.coreos.com/v1alpha1
+kind: ClusterServiceVersion
+metadata:
+  annotations:
+    alm-examples: '[]'
+    capabilities: Deep Insights
+    description: Kubernetes operator for managing the lifecycle of Apache Spark applications
+    operatorframework.io/suggested-namespace: openshift-operators
+    repository: https://github.com/teamziax/spark-operator
+    support: Apache Doris
+  name: spark-operator.v0.0.0
+  namespace: placeholder
+spec:
+  apiservicedefinitions: {}
+  customresourcedefinitions: {}
+  description: Kubernetes operator for managing the lifecycle of Apache Spark applications
+    on Kubernetes.
+  displayName: Spark Operator
+  icon:
+  - base64data: ""
+    mediatype: ""
+  install:
+    spec:
+      deployments: null
+    strategy: ""
+  installModes:
+  - supported: false
+    type: OwnNamespace
+  - supported: false
+    type: SingleNamespace
+  - supported: false
+    type: MultiNamespace
+  - supported: true
+    type: AllNamespaces
+  keywords:
+  - spark
+  - analytics
+  links:
+  - name: Spark Operator
+    url: https://github.com/teamziax/spark-operator
+  maintainers:
+  - email: hi@zi.ax
+    name: Ziax
+  maturity: alpha
+  minKubeVersion: 1.19.0
+  provider:
+    name: Ziax
+    url: https://ziax.com
+  version: 0.0.0
