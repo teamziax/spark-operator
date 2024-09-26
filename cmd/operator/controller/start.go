@@ -17,8 +17,11 @@ limitations under the License.
 package controller
 
 import (
+	"context"
 	"crypto/tls"
 	"flag"
+	admissionregistrationv1 "k8s.io/api/admissionregistration/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"os"
 	"slices"
 	"time"
@@ -276,6 +279,40 @@ func start() {
 	logger.Info("Starting manager")
 	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {
 		logger.Error(err, "Failed to start manager")
+		os.Exit(1)
+	}
+
+	// Setup controller for mutating admission webhook.
+	// get all webhooks
+	webhooks := &admissionregistrationv1.MutatingWebhookConfigurationList{}
+	mgr.GetClient().List(context.Background(), webhooks)
+	for _, webhook := range webhooks.Items {
+		for _, hook := range webhook.Webhooks {
+			if hook.Name == "mutate-pod.sparkoperator.k8s.io" {
+				// update to add object selector
+				if hook.ObjectSelector == nil {
+					hook.ObjectSelector = &metav1.LabelSelector{
+						MatchExpressions: []metav1.LabelSelectorRequirement{
+							{
+								Key:      "app.kubernetes.io/name",
+								Operator: metav1.LabelSelectorOpNotIn,
+								Values:   []string{"spark-operator"},
+							},
+						},
+					}
+					if err := mgr.GetClient().Update(context.Background(), &webhook); err != nil {
+						logger.Error(err, "Failed to update mutating webhook configuration", "name", webhook.Name)
+						os.Exit(1)
+					} else {
+						logger.Info("Updated mutating webhook configuration", "name", webhook.Name)
+					}
+				}
+			}
+		}
+	}
+
+	if webhooks.Items == nil || len(webhooks.Items) == 0 {
+		logger.Error(nil, "Failed to find mutating webhook configuration")
 		os.Exit(1)
 	}
 }

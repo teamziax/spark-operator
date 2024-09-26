@@ -19,16 +19,13 @@ package mutatingwebhookconfiguration
 import (
 	"context"
 	"fmt"
-
 	admissionregistrationv1 "k8s.io/api/admissionregistration/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-
-	"github.com/kubeflow/spark-operator/pkg/certificate"
 )
 
 var (
@@ -37,20 +34,18 @@ var (
 
 // Reconciler reconciles a webhook configuration object.
 type Reconciler struct {
-	client       client.Client
-	certProvider *certificate.Provider
-	name         string
+	client client.Client
+	name   string
 }
 
 // MutatingWebhookConfigurationReconciler implements reconcile.Reconciler.
 var _ reconcile.Reconciler = &Reconciler{}
 
 // NewReconciler creates a new MutatingWebhookConfigurationReconciler instance.
-func NewReconciler(client client.Client, certProvider *certificate.Provider, name string) *Reconciler {
+func NewReconciler(client client.Client, name string) *Reconciler {
 	return &Reconciler{
-		client:       client,
-		certProvider: certProvider,
-		name:         name,
+		client: client,
+		name:   name,
 	}
 }
 
@@ -58,18 +53,19 @@ func (r *Reconciler) SetupWithManager(mgr ctrl.Manager, options controller.Optio
 	return ctrl.NewControllerManagedBy(mgr).
 		Named("mutating-webhook-configuration-controller").
 		Watches(
-			&admissionregistrationv1.MutatingWebhookConfiguration{},
+			&admissionregistrationv1.MutatingWebhookConfiguration{
+				ObjectMeta: metav1.ObjectMeta{
+					GenerateName: r.name + "-",
+				},
+			},
 			NewEventHandler(),
-			builder.WithPredicates(
-				NewEventFilter(r.name),
-			),
 		).
 		WithOptions(options).
 		Complete(r)
 }
 
 func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	logger.Info("Updating CA bundle of MutatingWebhookConfiguration", "name", req.Name)
+	logger.Info("Fixing watchers", "name", req.Name)
 	if err := r.updateMutatingWebhookConfiguration(ctx, req.NamespacedName); err != nil {
 		return ctrl.Result{Requeue: true}, err
 	}
@@ -82,14 +78,19 @@ func (r *Reconciler) updateMutatingWebhookConfiguration(ctx context.Context, key
 		return fmt.Errorf("failed to get mutating webhook configuration %v: %v", key, err)
 	}
 
-	caBundle, err := r.certProvider.CACert()
-	if err != nil {
-		return fmt.Errorf("failed to get CA certificate: %v", err)
-	}
-
 	newWebhook := webhook.DeepCopy()
 	for i := range newWebhook.Webhooks {
-		newWebhook.Webhooks[i].ClientConfig.CABundle = caBundle
+		if newWebhook.Webhooks[i].ObjectSelector == nil {
+			newWebhook.Webhooks[i].ObjectSelector = &metav1.LabelSelector{
+				MatchExpressions: []metav1.LabelSelectorRequirement{
+					{
+						Key:      "app.kubernetes.io/name",
+						Operator: metav1.LabelSelectorOpNotIn,
+						Values:   []string{"spark-operator"},
+					},
+				},
+			}
+		}
 	}
 	if err := r.client.Update(ctx, newWebhook); err != nil {
 		return fmt.Errorf("failed to update mutating webhook configuration %v: %v", key, err)
