@@ -35,8 +35,8 @@ UNAME := `uname | tr '[:upper:]' '[:lower:]'`
 CONTAINER_TOOL ?= docker
 
 # Image URL to use all building/pushing image targets
-IMAGE_REGISTRY ?= docker.io
-IMAGE_REPOSITORY ?= kubeflow/spark-operator
+IMAGE_REGISTRY ?= quay.io
+IMAGE_REPOSITORY ?= ziax/spark-operator
 IMAGE_TAG ?= $(VERSION)
 IMAGE ?= $(IMAGE_REGISTRY)/$(IMAGE_REPOSITORY):$(IMAGE_TAG)
 
@@ -234,7 +234,7 @@ build-api-docs: gen-crd-api-reference-docs ## Build api documentation.
 # More info: https://docs.docker.com/develop/develop-images/build_enhancements/
 .PHONY: docker-build
 docker-build: ## Build docker image with the operator.
-	$(CONTAINER_TOOL) build -t ${IMAGE} .
+	$(CONTAINER_TOOL) build -t ${IMAGE} . --platform linux/amd64
 
 .PHONY: docker-push
 docker-push: ## Push docker image with the operator.

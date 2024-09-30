@@ -9,3 +9,7 @@ sparkctl/sparkctl-darwin-amd64
 # Various IDEs
 .idea/
 .vscode/
+
+# Bundle
+bundle/
+bundle.Dockerfile
