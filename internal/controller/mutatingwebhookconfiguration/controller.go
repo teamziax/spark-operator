@@ -23,8 +23,11 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
+	"sigs.k8s.io/controller-runtime/pkg/event"
+	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
@@ -53,12 +56,19 @@ func (r *Reconciler) SetupWithManager(mgr ctrl.Manager, options controller.Optio
 	return ctrl.NewControllerManagedBy(mgr).
 		Named("mutating-webhook-configuration-controller").
 		Watches(
-			&admissionregistrationv1.MutatingWebhookConfiguration{
-				ObjectMeta: metav1.ObjectMeta{
-					GenerateName: r.name + "-",
-				},
-			},
+			&admissionregistrationv1.MutatingWebhookConfiguration{},
 			NewEventHandler(),
+			builder.WithPredicates(&predicate.Funcs{
+				CreateFunc: func(createEvent event.CreateEvent) bool {
+					return createEvent.Object.GetGenerateName() == r.name+"-"
+				},
+				UpdateFunc: func(event event.UpdateEvent) bool {
+					return event.ObjectOld.GetGenerateName() == r.name+"-"
+				},
+				GenericFunc: func(genericEvent event.GenericEvent) bool {
+					return genericEvent.Object.GetGenerateName() == r.name+"-"
+				},
+			}),
 		).
 		WithOptions(options).
 		Complete(r)
@@ -80,7 +90,7 @@ func (r *Reconciler) updateMutatingWebhookConfiguration(ctx context.Context, key
 
 	newWebhook := webhook.DeepCopy()
 	for i := range newWebhook.Webhooks {
-		if newWebhook.Webhooks[i].ObjectSelector == nil {
+		if newWebhook.Webhooks[i].ObjectSelector == nil || len(newWebhook.Webhooks[i].ObjectSelector.MatchExpressions) == 0 {
 			newWebhook.Webhooks[i].ObjectSelector = &metav1.LabelSelector{
 				MatchExpressions: []metav1.LabelSelectorRequirement{
 					{
@@ -90,6 +100,7 @@ func (r *Reconciler) updateMutatingWebhookConfiguration(ctx context.Context, key
 					},
 				},
 			}
+			logger.Info("Updated webhook configuration", "name", newWebhook.Name, "webhook", newWebhook.Webhooks[i].Name)
 		}
 	}
 	if err := r.client.Update(ctx, newWebhook); err != nil {

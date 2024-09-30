@@ -107,7 +107,7 @@ func NewReconciler(
 // +kubebuilder:rbac:groups="",resources=resourcequotas,verbs=get;list;watch
 // +kubebuilder:rbac:groups="",namespace=placeholder,resources=secrets,verbs=get;list;watch;update
 // +kubebuilder:rbac:groups="",namespace=placeholder,resources=events,verbs=create;update;patch
-// +kubebuilder:rbac:groups="admissionregistration.k8s.io",resources=mutatingwebhookconfigurations;validatingwebhookconfigurations,verbs=get;list;watch
+// +kubebuilder:rbac:groups="admissionregistration.k8s.io",resources=mutatingwebhookconfigurations;validatingwebhookconfigurations,verbs=get;list;watch;update
 // +kubebuilder:rbac:groups="admissionregistration.k8s.io",namespace=placeholder,resources=mutatingwebhookconfigurations;validatingwebhookconfigurations,verbs=get;list;watch
 // +kubebuilder:rbac:groups="admissionregistration.k8s.io",namespace=placeholder,resources=mutatingwebhookconfigurations;validatingwebhookconfigurations,verbs=get;update,resourceNames=spark-operator-webhook-server
 // +kubebuilder:rbac:groups=extensions,resources=ingresses,verbs=get;list;watch;create;update;patch;delete

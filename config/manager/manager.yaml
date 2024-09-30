@@ -34,6 +34,7 @@ spec:
       containers:
       - name: manager
         image: controller:latest
+        imagePullPolicy: Always
         args:
           - controller
           - start
