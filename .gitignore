@@ -6,3 +6,7 @@ cover.out
 # Various IDEs
 .idea/
 .vscode/
+
+# Bundle
+bundle/
+bundle.Dockerfile
