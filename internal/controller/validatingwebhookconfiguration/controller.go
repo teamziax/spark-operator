@@ -46,11 +46,10 @@ type Reconciler struct {
 var _ reconcile.Reconciler = &Reconciler{}
 
 // NewReconciler creates a new ValidatingWebhookConfigurationReconciler instance.
-func NewReconciler(client client.Client, certProvider *certificate.Provider, name string) *Reconciler {
+func NewReconciler(client client.Client, name string) *Reconciler {
 	return &Reconciler{
-		client:       client,
-		certProvider: certProvider,
-		name:         name,
+		client: client,
+		name:   name,
 	}
 }
 
