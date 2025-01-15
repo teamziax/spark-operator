@@ -71,10 +71,11 @@ spec:
           periodSeconds: 10
         resources:
           limits:
-            cpu: 500m
-            memory: 128Mi
+            cpu: 750m
+            memory: 1.5Gi
           requests:
             cpu: 10m
             memory: 64Mi
+        imagePullPolicy: Always
       serviceAccountName: controller-manager
       terminationGracePeriodSeconds: 10

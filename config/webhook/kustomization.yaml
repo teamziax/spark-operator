@@ -10,4 +10,4 @@ kind: Kustomization
 images:
 - name: controller
   newName: quay.io/ziax/spark-operator
-  newTag: 2.0.0
+  newTag: 2.0.1
