@@ -69,5 +69,6 @@ spec:
             capabilities:
               drop:
                 - "ALL"
+          imagePullPolicy: Always
       serviceAccountName: controller-manager
       terminationGracePeriodSeconds: 10

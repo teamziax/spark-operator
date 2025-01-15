@@ -15,13 +15,6 @@ webhooks:
   matchPolicy: Exact
   name: mutate-pod.sparkoperator.k8s.io
   reinvocationPolicy: Never
-  # Not an operator pod
-  objectSelector:
-    matchExpressions:
-      - key: app.kubernetes.io/name
-        operator: NotIn
-        values:
-          - spark-operator
   rules:
   - apiGroups:
     - ""
@@ -67,7 +60,7 @@ webhooks:
     service:
       name: webhook-service
       namespace: system
-      path: /validate-sparkoperator-k8s-io-v1beta2-sparkapplication
+      path: /validate-sparkoperator-k8s-io-v1beta2-scheduledsparkapplication
   failurePolicy: Fail
   matchPolicy: Exact
   name: mutate-scheduledsparkapplication.sparkoperator.k8s.io

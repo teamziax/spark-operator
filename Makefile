@@ -379,3 +379,10 @@ GOBIN=$(LOCALBIN) go install $${package} ;\
 mv "$$(echo "$(1)" | sed "s/-$(3)$$//")" $(1) ;\
 }
 endef
+
+##@ Publishing
+.PHONY: release-bundle
+release-bundle: manifests bundle
+	@echo "Releasing bundle..."
+	$(CONTAINER_TOOL) build -f bundle.Dockerfile -t quay.io/ziax/spark-operator-bundle:$(BUNDLE_VERSION) .
+	$(CONTAINER_TOOL) push quay.io/ziax/spark-operator-bundle:$(BUNDLE_VERSION)
